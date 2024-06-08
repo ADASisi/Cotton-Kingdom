@@ -22,7 +22,7 @@ public class Land {
         try {
             if (status == StatusLand.FREE) {
                 status = StatusLand.SEEDED;
-                daysToPacking = 10; // Example value
+                daysToPacking = 2; // Example value
                 System.out.println("Land planted.");
             }
         } finally {
@@ -62,12 +62,20 @@ public class Land {
         try {
             if (status == StatusLand.SEEDED && daysToPacking > 0) {
                 daysToPacking--;
+                System.out.println("Days to packing decremented. Current value: " + daysToPacking);
             }
         } finally {
             lock.unlock();
         }
     }
 
-    // Getters and setters for fields
+    @Override
+    public String toString() {
+        return "Land{" +
+                "status=" + status +
+                ", enoughWater=" + enoughWater +
+                ", careLevel=" + careLevel +
+                ", daysToPacking=" + daysToPacking +
+                '}';
+    }
 }
-

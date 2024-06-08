@@ -4,60 +4,56 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class Farm {
-    private List<Land> lands;
-    private List<Monkey> monkeys;
-    private ExecutorService executor;
+    private Queue<Land> lands;
+    private Semaphore sem;
     private GlobalClock globalClock;
 
     public Farm(int numberOfLands, int numberOfMonkeys) {
-        lands = new ArrayList<>();
+        lands = new LinkedList<>();
         for (int i = 0; i < numberOfLands; i++) {
-            lands.add(new Land());
+            Land land = new Land();
+            land.plant(); // Planting lands initially
+            lands.add(land);
         }
 
-        monkeys = new ArrayList<>();
+        sem = new Semaphore(numberOfMonkeys);
+        globalClock = GlobalClock.getInstance();
+
+
+
+        new Thread(this::runGlobalClock).start();
         for (int i = 0; i < numberOfMonkeys; i++) {
-            monkeys.add(new Monkey("Monkey" + (i + 1), "Tool" + (i + 1), 5, 3));
+            new Thread(new Monkey(globalClock, i + 1, sem, this)).start();
         }
-
-        executor = Executors.newCachedThreadPool();
-        globalClock = new GlobalClock();
+//        new Thread(this::runGlobalClock).start();
     }
 
-    public void startFarmOperations() {
-        for (Land land : lands) {
-            land.plant();
+    public synchronized Land peekNextLand() {
+        return lands.peek();
+    }
+
+    public synchronized void assignLand(Land land) {
+        lands.poll();
+        land.harvest();
+    }
+
+    private void runGlobalClock() {
+        while (true) {
+            //Thread.sleep(1000); // Simulate one minute passing
+            globalClock.addMinute();
+            decrementDaysToPackingForAllLands();
         }
+    }
 
-        for (int i = 0; i < monkeys.size() && i < lands.size(); i++) {
-            monkeys.get(i).assignLand(lands.get(i));
-            executor.submit(monkeys.get(i));
-        }
-
-        monkeys.get(0).addAccessory();
-        monkeys.get(1).addAccessory();
-        monkeys.get(0).removeAccessory();
-
-        executor.submit(this::waterLands);
-
-        executor.shutdown();
-        try {
-            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
+    private void decrementDaysToPackingForAllLands() {
+        synchronized (this) {
+            for (Land land : lands) {
+                land.decrementDaysToPacking();
             }
-        } catch (InterruptedException e) {
-            executor.shutdownNow();
-        }
-    }
-
-    private void waterLands() {
-        for (Land land : lands) {
-            land.water();
         }
     }
 
     public static void main(String[] args) {
-        Farm farm = new Farm(5, 3);
-        farm.startFarmOperations();
+        new Farm(5, 3); // 5 lands and 3 monkeys
     }
 }
