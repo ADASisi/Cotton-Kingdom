@@ -100,4 +100,6 @@ public class Land {
     public void setDaysToPacking(int daysToPacking) {
         this.daysToPacking = daysToPacking;
     }
+
+
 }
