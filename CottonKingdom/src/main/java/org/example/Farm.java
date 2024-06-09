@@ -12,14 +12,15 @@ public class Farm {
         lands = new LinkedList<>();
         for (int i = 0; i < numberOfLands; i++) {
             Land land = new Land();
-            land.plant(); // Planting lands initially
+            land.plant();
+            land.setId(i + 1);
+            land.setDaysToPacking(new Random().nextInt(1, 3));
             lands.add(land);
+
         }
 
         sem = new Semaphore(numberOfMonkeys);
         globalClock = GlobalClock.getInstance();
-
-
 
         new Thread(this::runGlobalClock).start();
         for (int i = 0; i < numberOfMonkeys; i++) {
@@ -39,7 +40,6 @@ public class Farm {
 
     private void runGlobalClock() {
         while (true) {
-            //Thread.sleep(1000); // Simulate one minute passing
             globalClock.addMinute();
             decrementDaysToPackingForAllLands();
         }
@@ -54,6 +54,6 @@ public class Farm {
     }
 
     public static void main(String[] args) {
-        new Farm(5, 3); // 5 lands and 3 monkeys
+        new Farm(5, 3);
     }
 }

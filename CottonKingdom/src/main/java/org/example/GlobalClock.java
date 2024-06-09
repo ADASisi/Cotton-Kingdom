@@ -4,10 +4,10 @@ public class GlobalClock {
     private static GlobalClock instance;
 
     private static final int BUSINESS_HOUR_START = 8;
-    private static final int BUSINESS_HOUR_END = 18; // exclusive
+    private static final int BUSINESS_HOUR_END = 18;
 
     private int day = 1;
-    private int hour = 7; // Let's start at 7 so we don't have to wait too much
+    private int hour = 7;
     private int minute = 0;
 
     private GlobalClock() {}
@@ -24,10 +24,11 @@ public class GlobalClock {
         if (this.minute == 1) {
             this.minute = 0;
             addHour();
+            addHour();
         } else {
             this.minute++;
         }
-        this.notifyAll(); // Notify all waiting threads after each minute increment
+        this.notifyAll();
     }
 
     private synchronized void addHour() {
@@ -37,7 +38,7 @@ public class GlobalClock {
         } else {
             this.hour++;
             if (this.hour == BUSINESS_HOUR_START) {
-                this.notifyAll(); // Notify all waiting threads at the start of business hours
+                this.notifyAll();
             }
         }
     }

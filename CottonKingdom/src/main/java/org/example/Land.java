@@ -3,6 +3,7 @@ package org.example;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Land {
+    private int id;
     private StatusLand status;
     private boolean enoughWater;
     private int careLevel;
@@ -50,7 +51,7 @@ public class Land {
                 status = StatusLand.FREE;
                 enoughWater = false;
                 careLevel = 0;
-                System.out.println("Land harvested and reset to free.");
+                System.out.printf("Land %d harvested and reset to free.%n", id);
             }
         } finally {
             lock.unlock();
@@ -62,11 +63,19 @@ public class Land {
         try {
             if (status == StatusLand.SEEDED && daysToPacking > 0) {
                 daysToPacking--;
-                System.out.println("Days to packing decremented. Current value: " + daysToPacking);
+                System.out.printf("Days to packing decremented for land %d. Current value:%d %n",id, daysToPacking);
+            }
+            if(daysToPacking == 0)
+            {
+                status = StatusLand.REAP;
             }
         } finally {
             lock.unlock();
         }
+    }
+
+    public StatusLand getStatus() {
+        return status;
     }
 
     @Override
@@ -77,5 +86,17 @@ public class Land {
                 ", careLevel=" + careLevel +
                 ", daysToPacking=" + daysToPacking +
                 '}';
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setDaysToPacking(int daysToPacking) {
+        this.daysToPacking = daysToPacking;
     }
 }

@@ -19,8 +19,8 @@ public class Monkey implements Runnable {
         this.id = id;
         this.sem = sem;
         this.farm = farm;
-        this.hasAccessory = false;
-        this.natureBoost = false;
+        this.hasAccessory = new Random().nextBoolean();
+        this.natureBoost = new Random().nextBoolean();
     }
 
     public void addAccessory() {
@@ -43,35 +43,42 @@ public class Monkey implements Runnable {
 
         while (true) {
             try {
-//                System.out.print("molqqqq raboti%n");
                 sem.acquire();
 
+                Land land;
                 synchronized (farm) {
                     while (!GlobalClock.getInstance().isBusinessHours()) {
                         farm.wait();
                     }
 
-                    Land land = farm.peekNextLand();
-
-                    Duration waitTime = Duration.ofSeconds(new Random().nextInt(2, 5));
-                    System.out.printf("Monkey %d looks at Land for %d seconds%n", id, waitTime.toSeconds());
-                    Thread.sleep(waitTime.toMillis());
-
-                    if (new Random().nextBoolean()) {
-                        System.out.printf("Monkey %d starts working on Land%n", id);
-                        farm.assignLand(land);
-                    } else {
-                        System.out.printf("Monkey %d declines Land%n", id);
+                    land = farm.peekNextLand();
+                    if (land == null)
+                    {
                         sem.release();
                         continue;
                     }
-                }
 
-                int processTime = hasAccessory ? 3 : (natureBoost ? 1 : 5); // Example process times based on boosts
-                Thread.sleep(Duration.ofSeconds(processTime).toMillis());
-                System.out.printf("Land done by Monkey %d%n", id);
+                        Duration waitTime = Duration.ofSeconds(new Random().nextInt(2, 5));
+                        System.out.printf("Monkey %d looks at Land %d for %d seconds%n", id, land.getId(), waitTime.toSeconds());
+                        Thread.sleep(waitTime.toMillis());
 
-                sem.release();
+                        if (new Random().nextBoolean()) {
+                            System.out.printf("Monkey %d starts working on Land %d%n", id, land.getId());
+                            farm.assignLand(land);
+                        } else {
+                            System.out.printf("Monkey %d declines Land %d%n", id, land.getId());
+                            sem.release();
+                            continue;
+                        }
+                    }
+
+                    int processTime = hasAccessory ? 3 : (natureBoost ? 1 : 5); // Example process times based on boosts
+                    Thread.sleep(Duration.ofSeconds(processTime).toMillis());
+                    //System.out.printf("Land %d done by Monkey %d%n", land.getId(), id);
+
+                    sem.release();
+
+
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
