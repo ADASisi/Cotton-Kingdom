@@ -47,7 +47,7 @@ public class Land {
     public void harvest() {
         lock.lock();
         try {
-            if (status == StatusLand.SEEDED && daysToPacking <= 0) {
+            if (status == StatusLand.REAP && daysToPacking <= 0) {
                 status = StatusLand.FREE;
                 enoughWater = false;
                 careLevel = 0;
@@ -63,11 +63,12 @@ public class Land {
         try {
             if (status == StatusLand.SEEDED && daysToPacking > 0) {
                 daysToPacking--;
-                System.out.printf("Days to packing decremented for land %d. Current value:%d %n",id, daysToPacking);
+//                System.out.printf("Days to packing decremented for land %d. Current value:%d %n",id, daysToPacking);
             }
             if(daysToPacking == 0)
             {
                 status = StatusLand.REAP;
+                System.out.printf("Land %d is ready to harvest%n",id);
             }
         } finally {
             lock.unlock();

@@ -7,7 +7,6 @@ import java.util.concurrent.Semaphore;
 public class Monkey implements Runnable {
 
     private final GlobalClock clock;
-
     private final int id;
     private final Semaphore sem;
     private final Farm farm;
@@ -51,11 +50,18 @@ public class Monkey implements Runnable {
                         farm.wait();
                     }
 
-                    land = farm.peekNextLand();
-                    if (land == null)
-                    {
-                        sem.release();
-                        continue;
+                    while (true) {
+                        land = farm.peekNextLand();
+                        if (land == null) {
+                            farm.rotateLands();
+                            continue;
+                        }
+
+                        if (land.getStatus() == StatusLand.REAP) {
+                            break;
+                        } else {
+                            farm.rotateLands();
+                        }
                     }
 
                         Duration waitTime = Duration.ofSeconds(new Random().nextInt(2, 5));
@@ -72,9 +78,9 @@ public class Monkey implements Runnable {
                         }
                     }
 
-                    int processTime = hasAccessory ? 3 : (natureBoost ? 1 : 5); // Example process times based on boosts
+                    int processTime = hasAccessory ? 3 : (natureBoost ? 1 : 5);
                     Thread.sleep(Duration.ofSeconds(processTime).toMillis());
-                    //System.out.printf("Land %d done by Monkey %d%n", land.getId(), id);
+//                    System.out.printf("Land %d done by Monkey %d%n", land.getId(), id);
 
                     sem.release();
 
