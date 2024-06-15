@@ -20,10 +20,9 @@ public class GlobalClock {
         return instance;
     }
 
-    public synchronized void addMinute() {
-        if (this.minute == 1) {
+    public void addMinute() {
+        if (this.minute == 59) {
             this.minute = 0;
-            addHour();
             addHour();
         } else {
             this.minute++;
@@ -31,7 +30,7 @@ public class GlobalClock {
         this.notifyAll();
     }
 
-    private synchronized void addHour() {
+    private void addHour() {
         if (this.hour == 23) {
             this.hour = 0;
             addDay();
@@ -41,9 +40,10 @@ public class GlobalClock {
                 this.notifyAll();
             }
         }
+        System.out.println(this);
     }
 
-    public synchronized boolean isBusinessHours() {
+    public boolean isBusinessHours() {
         return this.hour >= BUSINESS_HOUR_START && this.hour < BUSINESS_HOUR_END;
     }
 
@@ -51,12 +51,13 @@ public class GlobalClock {
         return minute;
     }
 
-    private synchronized void addDay() {
+    private void addDay() {
         this.day++;
+
     }
 
     @Override
-    public synchronized String toString() {
+    public String toString() {
         return "Day %d, %02d:%02d".formatted(day, hour, minute);
     }
 }

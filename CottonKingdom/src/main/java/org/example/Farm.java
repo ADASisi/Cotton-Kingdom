@@ -8,17 +8,21 @@ public class Farm {
     private Semaphore sem;
     private GlobalClock globalClock;
     private int money;
+    private boolean needMoreLand;
 
     public Farm(int numberOfLands, int numberOfMonkeys, int initialMoney) {
         this.money = initialMoney;
         lands = new LinkedList<>();
+        globalClock = GlobalClock.getInstance();
+        Thread runnableTimer = new Thread(new RunnableTimer(10, globalClock, this::decrementDaysToPackingForAllLands));
+        runnableTimer.start();
         int landPrice = 100;
         int monkeyPrice = 150;
         for (int i = 0; i < numberOfLands; i++) {
             Land land = new Land();
             land.plant();
             land.setId(i + 1);
-            land.setDaysToPacking(new Random().nextInt(1, 3));
+            land.setDaysToPacking(new Random().nextInt(1, 5));
             String string = land.toString();
             System.out.println(string);
             deductMoney(landPrice);
@@ -26,12 +30,10 @@ public class Farm {
         }
 
         sem = new Semaphore(numberOfMonkeys);
-        globalClock = GlobalClock.getInstance();
 
-        new Thread(this::runGlobalClock).start();
-        deductMoney(monkeyPrice*numberOfMonkeys);
+        deductMoney(monkeyPrice * numberOfMonkeys);
         for (int i = 0; i < numberOfMonkeys; i++) {
-            new Thread(new Monkey(globalClock, i , sem, this)).start();
+            new Thread(new Monkey(globalClock, i, sem, this)).start();
         }
     }
 
@@ -50,25 +52,32 @@ public class Farm {
     }
 
     public synchronized void assignLand(Land land) {
-        //lands.poll();
         land.harvest();
-    }
-
-    private void runGlobalClock() {
-        while (true) {
-            globalClock.addMinute();
-            decrementDaysToPackingForAllLands();
-        }
     }
 
     private void decrementDaysToPackingForAllLands() {
         synchronized (this) {
             for (Land land : lands) {
-                if(land.getStatus() == StatusLand.SEEDED)
-                {
+                if (land.getStatus() == StatusLand.SEEDED) {
                     land.decrementDaysToPacking();
                 }
             }
+        }
+    }
+
+    public synchronized boolean checkLandIsFree() {
+        int freeLands = 0;
+        for (Land land : lands) {
+            if (land.getStatus() == StatusLand.FREE) {
+                freeLands++;
+            }
+        }
+        if (freeLands == getNumberOfLands()) {
+            System.out.println("All lands are free");
+            needMoreLand = true;
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -94,6 +103,7 @@ public class Farm {
         System.out.println("Let's start: enter monkeys and lands you want");
         int monkeys = scanner.nextInt();
         int lands = scanner.nextInt();
-        new Farm(lands, monkeys, 1000);
+        int initialMoney = 1000;
+        Farm farm = new Farm(lands, monkeys, initialMoney);
     }
 }
